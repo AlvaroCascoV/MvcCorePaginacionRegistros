@@ -5,8 +5,18 @@
 <hr/>
 @* Hay que decirle que lo interprete como html explicitamente *@
 @Html.Raw(ViewData["LINKS"])
-<hr/>
 
+@{
+    //hacemos aqui el bucle para poder personalizar los links
+    int numRegistros = (int)ViewData["NREGISTROS"];
+    int numPagina = 1;
+}
+<hr/>
+ @for (int i = 1; i <= numRegistros; i += 2) //el 2 es el numero de registros que se muestran en cada pagina
+    {
+        <a class='btn btn-primary' asp-action='GrupoVistaDepartamentos' asp-controller='Paginacion' asp-route-posicion='@i'>Página @numPagina </a>
+        numPagina += 1;
+    }
 <table class="table table-primary">
     <thead>
         <tr>

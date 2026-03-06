@@ -65,6 +65,7 @@ namespace MvcCorePaginacionRegistros.Controllers
                 numPagina += 1;
             }
             html += "</div>";
+            ViewData["NREGISTROS"] = numRegistros;
             ViewData["LINKS"] = html;
             List<VistaDepartamento> departamentos = await this.repo.GetGrupoVistaDepartamentoAsync(posicion.Value);
             return View(departamentos);
