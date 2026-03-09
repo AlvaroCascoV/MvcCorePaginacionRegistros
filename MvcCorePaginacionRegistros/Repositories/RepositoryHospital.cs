@@ -175,5 +175,42 @@ go
         {
             return await this.context.Empleados.Where(z => z.IdDepartamento == iddept).CountAsync();
         }
+
+        public async Task<ModelEmpDept> GetEmpsDeptProcedureAsync(int iddept, int posicion)
+        {
+            /*
+             
+CREATE PROCEDURE SP_DETAILS_DEPT_EMPLEADO_PAGINACION
+(@iddept INT, @posicion INT, @registros INT OUT)
+AS
+    SELECT @registros = COUNT(EMP_NO) 
+    FROM EMP 
+    WHERE DEPT_NO = @iddept
+
+    SELECT DEPT_NO, DNOMBRE, LOC 
+    FROM DEPT 
+    WHERE DEPT_NO = @iddept
+
+    SELECT EMP_NO, APELLIDO, OFICIO, SALARIO, DEPT_NO 
+    FROM (
+        SELECT CAST(ROW_NUMBER() OVER (ORDER BY EMP_NO) AS INT) AS POSICION,
+               EMP_NO, APELLIDO, OFICIO, SALARIO, DEPT_NO
+        FROM EMP
+        WHERE DEPT_NO = @iddept
+    ) QUERY
+    WHERE QUERY.POSICION = @posicion
+GO
+             */
+
+            string sql = "SP_DETAILS_DEPT_EMPLEADO_PAGINACION @iddept, @posicion, @registros out";
+            SqlParameter pamIddept = new SqlParameter("@iddept", iddept);
+            SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
+            SqlParameter pamRegistros = new SqlParameter("@registros", 0);
+            pamRegistros.DbType = DbType.Int32;
+            pamRegistros.Direction = ParameterDirection.Output;
+            var consulta = this.context.ModelEmpDept.FromSqlRaw(sql, pamIddept, pamPosicion, pamRegistros);
+            ModelEmpDept model = await consulta.FirstOrDefaultAsync();
+            return model;
+        }
     }
 }
