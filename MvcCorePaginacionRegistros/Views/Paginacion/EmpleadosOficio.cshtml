@@ -8,7 +8,6 @@
     <button class="btn btn-success">Buscar empleados</button>
 </form>
 
-<hr />
 
 @{
     int numRegistros = 0;
@@ -26,6 +25,7 @@
 
 @if (Model != null)
 {
+<hr />
     <ul class="list-group">
     @for (int i = 1; i <= numRegistros; i += 3)
     {
