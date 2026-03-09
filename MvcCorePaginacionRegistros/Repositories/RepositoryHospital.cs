@@ -1,17 +1,29 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using MvcCorePaginacionRegistros.Data;
 using MvcCorePaginacionRegistros.Models;
 
 namespace MvcCorePaginacionRegistros.Repositories
 {
-    #region SQl
-//    alter view V_DEPARTAMENTOS_INDIVIDUAL
-//as
-//select CAST(
-//    ROW_NUMBER() over (order by DEPT_NO) as int) 
-//		as POSICION,
-//		DEPT_NO, DNOMBRE, LOC from DEPT
-//go
+    #region SQL
+    /*
+    alter view V_DEPARTAMENTOS_INDIVIDUAL
+    as
+    select CAST(
+        ROW_NUMBER() over (order by DEPT_NO) as int) 
+    		as POSICION,
+    		DEPT_NO, DNOMBRE, LOC from DEPT
+    go
+    create procedure SP_GRUPO_DEPARTAMENTOS
+    (@posicion int)
+as
+
+select DEPT_NO, DNOMBRE, LOC from V_DEPARTAMENTOS_INDIVIDUAL
+WHERE POSICION >= @posicion and POSICION<(@posicion +2)
+
+go
+    */
     #endregion
     public class RepositoryHospital
     {
@@ -40,6 +52,14 @@ namespace MvcCorePaginacionRegistros.Repositories
             var consulta = from datos in this.context.VistaDepartamentos
                            where datos.Posicion >= posicion && datos.Posicion < (posicion + 2)
                            select datos;
+            return await consulta.ToListAsync();
+        }
+
+        public async Task<List<Departamento>> GetGrupoDepartamentosAsync(int posicion)
+        {
+            string sql = "SP_GRUPO_DEPARTAMENTOS @posicion";
+            SqlParameter pamposicion = new SqlParameter("@posicion", posicion);
+            var consulta = this.context.Departamentos.FromSqlRaw(sql, pamposicion);
             return await consulta.ToListAsync();
         }
     }

@@ -70,7 +70,18 @@ namespace MvcCorePaginacionRegistros.Controllers
             List<VistaDepartamento> departamentos = await this.repo.GetGrupoVistaDepartamentoAsync(posicion.Value);
             return View(departamentos);
         }
-
+        public async Task<IActionResult> GrupoDepartamentos(int? posicion)
+        {
+            if (posicion == null)
+            {
+                posicion = 1;
+            }
+            int numRegistros = await this.repo.GetNumeroRegistrosVistaDepartamentosAsync();
+            
+            ViewData["NREGISTROS"] = numRegistros;
+            List<Departamento> departamentos = await this.repo.GetGrupoDepartamentosAsync(posicion.Value);
+            return View(departamentos);
+        }
         public IActionResult Index()
         {
             return View();
