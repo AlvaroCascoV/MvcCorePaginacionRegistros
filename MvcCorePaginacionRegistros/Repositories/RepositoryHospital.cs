@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using MvcCorePaginacionRegistros.Data;
 using MvcCorePaginacionRegistros.Models;
+using System.Data;
 
 namespace MvcCorePaginacionRegistros.Repositories
 {
@@ -53,6 +55,21 @@ as
 	where (QUERY.POSICION >= @posicion and QUERY.POSICION < (@posicion + 3))
 go
 exec SP_GRUPO_EMPLEADOS_OFICIO 5,'EMPLEADO'
+
+    para evitar hacer 2 llamadas a BBDD, juntamos el count en el procedure
+    
+alter procedure SP_GRUPO_EMPLEADOS_OFICIO
+(@posicion int, @oficio nvarchar(50), @registros int OUT)
+as
+	--ALMACENAMOS EL NUMERO DE REGISTROS FILTRADOS
+	select @registros = count(EMP_NO) from EMP where OFICIO=@oficio
+
+	select EMP_NO, APELLIDO, OFICIO, SALARIO, DEPT_NO from
+	(select cast(ROW_NUMBER() over (order by APELLIDO) as int) as POSICION
+	, EMP_NO, APELLIDO, OFICIO, SALARIO, DEPT_NO from EMP
+	where OFICIO=@oficio) QUERY
+	where (QUERY.POSICION >= @posicion and QUERY.POSICION < (@posicion + 3))
+go
     */
     #endregion
     public class RepositoryHospital
@@ -112,11 +129,34 @@ exec SP_GRUPO_EMPLEADOS_OFICIO 5,'EMPLEADO'
         }
         public async Task<List<Empleado>> GetGrupoEmpleadosOficioAsync(int posicion, string oficio)
         {
-            string sql = "SP_GRUPO_EMPLEADOS_OFICIO @posicion, @oficio";
+            string sql = "SP_GRUPO_EMPLEADOS_OFICIO @posicion, @oficio, @registros out";
             SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
             SqlParameter pamOficio = new SqlParameter("@oficio", oficio);
+            
             var consulta = this.context.Empleados.FromSqlRaw(sql, pamPosicion, pamOficio);
             return await consulta.ToListAsync();
+        }
+        //añadimos la recogida de registros para evitar las dos llamadas a bbdd
+        public async Task</*List<Empleado>*/ ModelEmpleadosOficio> GetGrupoEmpleadosOficioOutAsync(int posicion, string oficio)
+        {
+            string sql = "SP_GRUPO_EMPLEADOS_OFICIO @posicion, @oficio, @registros out";
+            SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
+            SqlParameter pamOficio = new SqlParameter("@oficio", oficio);
+            
+            SqlParameter pamRegistros = new SqlParameter("@registros", 0);
+            pamRegistros.DbType = DbType.Int32;
+            pamRegistros.Direction = ParameterDirection.Output;
+
+            var consulta = this.context.Empleados.FromSqlRaw(sql, pamPosicion, pamOficio, pamRegistros);
+            List<Empleado> empleados = await consulta.ToListAsync();
+            //HASTA QUE NO HEMOS EXTRAIDO LOS DATOS (Empleados)
+            //NO SE LIBERAN LOS PARAMETROS DE SALIDA
+            int registros = (int)pamRegistros.Value;
+            ModelEmpleadosOficio model = new ModelEmpleadosOficio
+            {
+                Empleados = empleados, NumeroRegistros = registros
+            };
+            return model;
         }
     }
 }
