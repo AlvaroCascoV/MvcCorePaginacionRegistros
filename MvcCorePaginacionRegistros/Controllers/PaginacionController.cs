@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MvcCorePaginacionRegistros.Models;
 using MvcCorePaginacionRegistros.Repositories;
+using System.Threading.Tasks;
 
 namespace MvcCorePaginacionRegistros.Controllers
 {
@@ -143,6 +144,40 @@ namespace MvcCorePaginacionRegistros.Controllers
             ViewData["REGISTROS"] = model.NumeroRegistros;
             ViewData["OFICIO"] = oficio;
             return View(model.Empleados);
+        }
+
+        public async Task<IActionResult> DetailsDept(int iddept, int? posicion)
+        {
+            Departamento dept = await this.repo.FindDepartamentoAsync(iddept);
+            ViewData["DEPARTAMENTO"] = dept;   
+
+            if (posicion == null)
+            {
+                posicion = 1;
+            }
+            int numRegistros = await this.repo.GetNumeroEmpleadosDeptAsync(iddept);
+            ViewData["REGISTROS"] = numRegistros;
+            int siguiente = posicion.Value + 1;
+            if (siguiente > numRegistros)
+            {
+                siguiente = numRegistros;
+            }
+            int anterior = posicion.Value - 1;
+            if (anterior < 1)
+            {
+                anterior = 1;
+            }
+            ViewData["ULTIMO"] = numRegistros;
+            ViewData["SIGUIENTE"] = siguiente;
+            ViewData["ANTERIOR"] = anterior;
+            ViewData["POSICION"] = posicion.Value;
+            List<Empleado> empleados = await this.repo.GetEmpleadosDeptAsync(iddept);
+            if(empleados.Count == 0)
+            {
+                return View();
+            }
+            Empleado empleado = empleados[posicion.Value - 1];
+            return View(empleado);
         }
 
         public IActionResult Index()

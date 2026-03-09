@@ -122,7 +122,7 @@ go
             var consulta = this.context.Empleados.FromSqlRaw(sql, pamPosicion);
             return await consulta.ToListAsync();
         }
-        
+
         public async Task<int> GetEmpleadosOficioCountAsync(string oficio)
         {
             return await this.context.Empleados.Where(z => z.Oficio == oficio).CountAsync();
@@ -132,7 +132,7 @@ go
             string sql = "SP_GRUPO_EMPLEADOS_OFICIO @posicion, @oficio, @registros out";
             SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
             SqlParameter pamOficio = new SqlParameter("@oficio", oficio);
-            
+
             var consulta = this.context.Empleados.FromSqlRaw(sql, pamPosicion, pamOficio);
             return await consulta.ToListAsync();
         }
@@ -142,7 +142,7 @@ go
             string sql = "SP_GRUPO_EMPLEADOS_OFICIO @posicion, @oficio, @registros out";
             SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
             SqlParameter pamOficio = new SqlParameter("@oficio", oficio);
-            
+
             SqlParameter pamRegistros = new SqlParameter("@registros", 0);
             pamRegistros.DbType = DbType.Int32;
             pamRegistros.Direction = ParameterDirection.Output;
@@ -154,9 +154,26 @@ go
             int registros = (int)pamRegistros.Value;
             ModelEmpleadosOficio model = new ModelEmpleadosOficio
             {
-                Empleados = empleados, NumeroRegistros = registros
+                Empleados = empleados,
+                NumeroRegistros = registros
             };
             return model;
+        }
+        public async Task<List<Departamento>> GetDepartamentos()
+        {
+            return await this.context.Departamentos.ToListAsync();
+        }
+        public async Task<Departamento> FindDepartamentoAsync(int id)
+        {
+            return await this.context.Departamentos.Where(z => z.IdDepartamento == id).FirstOrDefaultAsync();
+        }
+        public async Task<List<Empleado>> GetEmpleadosDeptAsync(int iddept)
+        {
+            return await this.context.Empleados.Where(z => z.IdDepartamento == iddept).ToListAsync();
+        }
+        public async Task<int> GetNumeroEmpleadosDeptAsync(int iddept)
+        {
+            return await this.context.Empleados.Where(z => z.IdDepartamento == iddept).CountAsync();
         }
     }
 }

@@ -6,16 +6,16 @@
 <div>
     <ul class="list-group-horizontal">
         <li class="list-group-item">
-            <a asp-controller="Paginacion" asp-action="RegistroVistaDepartamento" asp-route-posicion="1">Primero</a>
+            <a asp-controller="Paginacion" asp-action="DetailsDept" asp-route-posicion="1">Primero</a>
         </li>
         <li class="list-group-item">
-            <a asp-controller="Paginacion" asp-action="RegistroVistaDepartamento" asp-route-posicion="@ViewData["ANTERIOR"]">Anterior</a>
+            <a asp-controller="Paginacion" asp-action="DetailsDept" asp-route-posicion="@ViewData["ANTERIOR"]">Anterior</a>
         </li>
         <li class="list-group-item">
-            <a asp-controller="Paginacion" asp-action="RegistroVistaDepartamento" asp-route-posicion="@ViewData["SIGUIENTE"]">Siguiente</a>
+            <a asp-controller="Paginacion" asp-action="DetailsDept" asp-route-posicion="@ViewData["SIGUIENTE"]">Siguiente</a>
         </li>
         <li class="list-group-item">
-            <a asp-controller="Paginacion" asp-action="RegistroVistaDepartamento" asp-route-posicion="@ViewData["ULTIMO"]">Último</a>
+            <a asp-controller="Paginacion" asp-action="DetailsDept" asp-route-posicion="@ViewData["ULTIMO"]">Último</a>
         </li>
     </ul>
 </div>
