@@ -70,6 +70,19 @@ as
 	where OFICIO=@oficio) QUERY
 	where (QUERY.POSICION >= @posicion and QUERY.POSICION < (@posicion + 3))
 go
+
+
+    create procedure SP_EMPLEADOS_DEPARTAMENTO
+    (@posicion int, @iddepartamento int, @registros int out)
+    as
+        select @registros = count(EMP_NO) from EMP where DEPT_NO = @iddepartamento
+        select EMP_NO, APELLIDO, OFICIO, SALARIO, DEPT_NO from
+        (select cast(ROW_NUMBER() over (order by APELLIDO) as int)
+        as POSICION, EMP_NO, APELLIDO, OFICIO, SALARIO, DEPT_NO
+        from EMP
+        where DEPT_NO = @iddepartamento) QUERY
+        where(QUERY.POSICION >= @posicion and QUERY.POSICION<(@posicion + 3))
+    go
     */
     #endregion
     public class RepositoryHospital
@@ -159,14 +172,36 @@ go
             };
             return model;
         }
-        public async Task<List<Departamento>> GetDepartamentos()
+        //PRACTICA------------------------------------------------------------
+        public async Task<List<Departamento>> GetDepartamentosAsync()
         {
             return await this.context.Departamentos.ToListAsync();
         }
+
         public async Task<Departamento> FindDepartamentoAsync(int id)
         {
             return await this.context.Departamentos.Where(z => z.IdDepartamento == id).FirstOrDefaultAsync();
         }
+
+        public async Task<ModelEmpDept> GetEmpleadosDepartamentoAsync(int posicion, int iddepartamento)
+        {
+            string sql = "SP_EMPLEADOS_DEPARTAMENTO @posicion, @iddepartamento, @registros out";
+            SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
+            SqlParameter pamIdDepartamento = new SqlParameter("@iddepartamento", iddepartamento);
+            SqlParameter pamRegistros = new SqlParameter("@registros", 0);
+            pamRegistros.Direction = ParameterDirection.Output;
+            pamRegistros.DbType = DbType.Int32;
+
+            var consulta = this.context.Empleados.FromSqlRaw(sql, pamPosicion, pamIdDepartamento, pamRegistros);
+
+            ModelEmpDept model = new ModelEmpDept();
+
+            model.Empleados = await consulta.ToListAsync();
+            model.NumeroRegistros = (int)pamRegistros.Value;
+
+            return model;
+        }
+        //CON EF
         public async Task<List<Empleado>> GetEmpleadosDeptAsync(int iddept)
         {
             return await this.context.Empleados.Where(z => z.IdDepartamento == iddept).ToListAsync();
@@ -174,43 +209,6 @@ go
         public async Task<int> GetNumeroEmpleadosDeptAsync(int iddept)
         {
             return await this.context.Empleados.Where(z => z.IdDepartamento == iddept).CountAsync();
-        }
-
-        public async Task<ModelEmpDept> GetEmpsDeptProcedureAsync(int iddept, int posicion)
-        {
-            /*
-             
-CREATE PROCEDURE SP_DETAILS_DEPT_EMPLEADO_PAGINACION
-(@iddept INT, @posicion INT, @registros INT OUT)
-AS
-    SELECT @registros = COUNT(EMP_NO) 
-    FROM EMP 
-    WHERE DEPT_NO = @iddept
-
-    SELECT DEPT_NO, DNOMBRE, LOC 
-    FROM DEPT 
-    WHERE DEPT_NO = @iddept
-
-    SELECT EMP_NO, APELLIDO, OFICIO, SALARIO, DEPT_NO 
-    FROM (
-        SELECT CAST(ROW_NUMBER() OVER (ORDER BY EMP_NO) AS INT) AS POSICION,
-               EMP_NO, APELLIDO, OFICIO, SALARIO, DEPT_NO
-        FROM EMP
-        WHERE DEPT_NO = @iddept
-    ) QUERY
-    WHERE QUERY.POSICION = @posicion
-GO
-             */
-
-            string sql = "SP_DETAILS_DEPT_EMPLEADO_PAGINACION @iddept, @posicion, @registros out";
-            SqlParameter pamIddept = new SqlParameter("@iddept", iddept);
-            SqlParameter pamPosicion = new SqlParameter("@posicion", posicion);
-            SqlParameter pamRegistros = new SqlParameter("@registros", 0);
-            pamRegistros.DbType = DbType.Int32;
-            pamRegistros.Direction = ParameterDirection.Output;
-            var consulta = this.context.ModelEmpDept.FromSqlRaw(sql, pamIddept, pamPosicion, pamRegistros);
-            ModelEmpDept model = await consulta.FirstOrDefaultAsync();
-            return model;
         }
     }
 }

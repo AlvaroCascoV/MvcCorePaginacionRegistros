@@ -1,9 +1,11 @@
-﻿namespace MvcCorePaginacionRegistros.Models
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace MvcCorePaginacionRegistros.Models
 {
+    [Keyless]
     public class ModelEmpDept
     {
-        Departamento departamento { get; set; }
-        List<Empleado> empleados { get; set; }
-        int NRegistros { get; set; }
+        public List<Empleado> Empleados { get; set; }
+        public int NumeroRegistros { get; set; }
     }
 }

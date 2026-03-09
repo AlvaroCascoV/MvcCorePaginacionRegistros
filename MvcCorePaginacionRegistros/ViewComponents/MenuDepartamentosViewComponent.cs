@@ -15,7 +15,7 @@ namespace MvcCorePaginacionRegistros.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            List<Departamento> depts = await this.repo.GetDepartamentos();
+            List<Departamento> depts = await this.repo.GetDepartamentosAsync();
             return View(depts);
         }
     }
